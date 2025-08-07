@@ -1,0 +1,99 @@
+
+Image Processing & Analysis using EBImage in R with Edge Detection 
+
+
+🛠️ Advanced Batch Image Processing Pipeline (Edge Detection + Feature Extraction) in R
+Key Steps:
+    Read images from a folder.
+    Apply preprocessing (crop, resize if needed).
+    Apply Edge Detection (Sobel Filter).
+    Extract Features (Count Edges / Edge Pixel Intensity).
+    Save processed images.
+    Export a CSV summary of features.
+
+
+R Script: Batch Edge Detection & Feature Extraction Automation
+
+# Load Library
+library(EBImage)
+
+# Define Input and Output Directories
+input_dir <- "~/Desktop/InputImages/"
+edge_output_dir <- "~/Desktop/EdgeDetectedImages/"
+report_output_path <- "~/Desktop/Edge_Feature_Report.csv"
+
+# Create Output Directory if it doesn't exist
+if (!dir.exists(edge_output_dir)) {
+  dir.create(edge_output_dir)
+}
+
+# Get List of Image Files
+image_files <- list.files(path = input_dir, pattern = "\\.jpg$|\\.png$", full.names = TRUE)
+
+# Initialize Feature Summary List
+feature_summary <- data.frame(ImageName = character(),
+                              EdgePixelCount = integer(),
+                              MeanEdgeIntensity = numeric(),
+                              stringsAsFactors = FALSE)
+
+# Batch Processing Loop
+for (img_path in image_files) {
+  # Read Image
+  img <- readImage(img_path)
+  img_name <- basename(img_path)
+  
+  # Convert to Grayscale for Edge Detection
+  gray_img <- channel(img, "gray")
+  
+  # Sobel Edge Detection
+  sobel_x <- matrix(c(-1,0,1,-2,0,2,-1,0,1), nrow=3, ncol=3)
+  sobel_y <- matrix(c(-1,-2,-1,0,0,0,1,2,1), nrow=3, ncol=3)
+  
+  edge_x <- filter2(gray_img, sobel_x)
+  edge_y <- filter2(gray_img, sobel_y)
+  
+  # Combine X and Y gradients (Edge Magnitude)
+  edge_mag <- sqrt(edge_x^2 + edge_y^2)
+  
+  # Threshold to create binary edge map
+  edge_thresh <- edge_mag > 0.2  # You can adjust threshold
+  
+  # Feature Extraction
+  edge_pixel_count <- sum(edge_thresh)
+  mean_edge_intensity <- mean(edge_mag[edge_thresh])
+  
+  # Save Edge Detected Image
+  output_path <- file.path(edge_output_dir, paste0("edges_", img_name))
+  writeImage(edge_thresh, output_path)
+  
+  # Append to Feature Summary
+  feature_summary <- rbind(feature_summary,
+                           data.frame(ImageName = img_name,
+                                      EdgePixelCount = edge_pixel_count,
+                                      MeanEdgeIntensity = mean_edge_intensity))
+  
+  print(paste("Processed:", img_name))
+}
+
+# Export Feature Summary CSV
+write.csv(feature_summary, report_output_path, row.names = FALSE)
+
+print("Edge Detection and Feature Extraction Completed!")
+print(paste("Feature report saved to:", report_output_path))
+
+Output:
+    EdgeDetectedImages/ → Folder with binary edge maps of each image.
+    Edge_Feature_Report.csv → CSV file with:
+    Image Name
+    Edge Pixel Count
+    Mean Edge Intensity of edges
+
+Example CSV Report:
+ImageName	  EdgePixelCount	MeanEdgeIntensity
+pic1.jpg	  12500	          0.45
+pic2.jpg	  9800	          0.38
+pic3.png	  11320          	0.42
+
+
+
+
