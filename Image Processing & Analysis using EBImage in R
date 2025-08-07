@@ -1,0 +1,210 @@
+Project Title:
+Image Processing & Analysis using EBImage in R
+
+1. Objective
+    The goal of this project is to perform basic image processing operations (brightness, contrast, gamma correction, filtering, transformations, and combining images) using R's EBImage package. 
+    The project demonstrates how to manipulate and analyze image data for exploratory analysis and visualization purposes.
+
+2. Dataset Description
+    Image1: pic1.JPG (Local Image File)
+
+    Image2: pic2.JPG (Local Image File)
+Both images are standard JPEG images stored on the local machine, read using readImage() function from EBImage.
+
+3. Methods & Techniques
+The following image processing techniques are applied:
+
+    Histogram Visualization
+    
+    Brightness Manipulation
+    
+    Image Combination/Blending
+    
+    Contrast Adjustment
+    
+    Gamma Correction
+    
+    Grayscale Conversion
+    
+    Image Cropping
+    
+    Saving New Image Files
+    
+    Geometric Transformations: Flip, Flop, Rotate, Resize
+    
+    Low-Pass (Blurring) Filter
+    
+    High-Pass (Sharpening) Filter
+    
+    Image Enhancement via Filter Combination
+
+4. Code Workflow Summary
+a. Setup & Load Images
+    Install and load the EBImage package.
+    
+    Read two images: pic1.JPG & pic2.JPG.
+    
+    Visualize pixel intensity distribution using histograms.
+
+b. Brightness Adjustment
+    Increase brightness by adding a constant (Image1 + 0.4).
+    
+    Decrease brightness by subtracting a constant (Image1 - 0.4).
+    
+    Visualize the results and their histograms.
+
+c. Combining Images
+    Combine Image1 and Image2 using combine().
+    
+    Blend two images by overlaying Image2 on Image1 with a scale factor.
+
+d. Contrast Manipulation
+    Reduce contrast by multiplying image matrix by 0.5.
+    
+    Increase contrast by multiplying by 3.
+
+e. Gamma Correction
+    Apply gamma correction with γ = 0.5 (brightens image).
+    
+    Apply gamma correction with γ = 3 (darkens image).
+
+f. Color Modes & Grayscale Conversion
+    Convert Image1 to Grayscale.
+    
+    Revert Image1 back to Color mode.
+
+g. Cropping
+    Crop a portion of Image1 by selecting matrix index ranges.
+    
+    Save the cropped image to a new file “NewImage.jpg”.
+
+h. Geometric Transformations
+    Flip (vertical mirror), Flop (horizontal mirror), Rotate (45 degrees), and Resize image.
+
+i. Filtering
+    Apply a Low-Pass (blurring) filter using a disc-shaped kernel.
+    
+    Apply a High-Pass (sharpening) filter with a custom kernel.
+
+j. Enhancing & Combining Filtered Images
+    Combine original and high-pass filtered images for enhanced sharpness.
+    
+    Visualize the resulting image and its histogram.
+
+5. Results Summary
+    Brightness & Contrast: Successfully demonstrated pixel intensity adjustments affecting the image's visual perception.
+    
+    Gamma Correction: Enhanced or darkened midtones, highlighting how non-linear corrections affect image perception.
+    
+    Combining Images: Showed basic overlaying of images and blending effects.
+    
+    Filtering: Applied smoothing (low-pass) and sharpening (high-pass) to emphasize or suppress image details.
+    
+    Transformations: Image flipping, rotation, resizing, and cropping were visualized.
+    
+    Saving Output: A cropped section was saved as a new image file.
+
+6. Conclusion
+    This project showcased basic image processing techniques using R's EBImage package, useful for:
+    
+    Pre-processing images for computer vision tasks.
+    
+    Enhancing images for visualization.
+    
+    Learning foundational concepts in digital image manipulation such as brightness, contrast, gamma correction, and filtering.
+    Further steps could include edge detection, segmentation, or feature extraction for more advanced analysis.
+
+ImageProcessing_Project/
+│
+├── pic1.JPG
+├── pic2.JPG
+├── NewImage.jpg
+├── image_processing_script.R
+
+image_processing_script.R
+
+# Install EBImage
+#install.packages("BiocManager")
+#BiocManager::install("EBImage")
+
+# Read Image
+library(EBImage)
+Image1 <- readImage("~/Desktop/pic1.JPG")
+Image2 <- readImage("~/Desktop/pic2.JPG")
+
+# Plot data
+hist(Image1)
+
+# Manipulating brightness
+# Light
+a <- Image1 + 0.4
+print(a)
+display(a)
+
+# Dark
+b <- Image1 - 0.4
+display(b)
+hist(b)
+
+# Combine
+c <- combine(Image1,Image2)
+display(c)
+
+# Put two picture into one
+d <- Image1 + Image2/4
+display(d)
+hist(d)
+
+# Manipulating contrast
+e <- Image1*0.5
+display(e)
+f <- Image1*3
+display(f)
+
+# Gamma Correction
+g <- Image1^0.5
+h <- Image1^3
+display(g)
+display(h)
+
+# Color
+colorMode(Image1) <- Grayscale
+print(Image1)
+display(Image1)
+
+colorMode(Image1) <- Color #to return to color
+
+# Cropping
+k <- Image1[800:2686, 800:2200,]
+display(k)
+
+# New image file
+writeImage(k, "NewImage.jpg")
+
+# Flip, Flop, Rotate, resize
+l <- flip(Image1)
+display(l)
+m <- rotate(Image1, 45)
+display(m)
+n<- flop(Image1)
+display(n)
+o <- resize(Image1, 400)
+display(o)
+
+# Low-pass filter
+low <- makeBrush(81, shape = 'disc', step=FALSE)^2
+low <- low/sum(low)
+Image.low <- filter2(Image1, low)
+display(Image.low )
+
+# High-pass filter
+high <- matrix(1, nc=3, nr = 3)
+high[2,2] <- -5
+Image.high <- filter2(Image1, high)
+display(Image.high)
+
+# Combine
+new<- Image.high/5+Image1
+comb <- combine(Image1, new)
+display(comb)
+hist(comb)
