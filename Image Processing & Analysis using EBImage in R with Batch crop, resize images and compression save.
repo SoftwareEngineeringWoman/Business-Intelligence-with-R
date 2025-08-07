@@ -1,0 +1,76 @@
+Image Processing & Analysis using EBImage in R with Batch crop, resize images and compression save.
+
+Updated Workflow Steps:
+    Load all images from a folder.
+    Apply crop (custom coordinates).
+    Resize to fixed dimensions (e.g., 500x500).
+    Save images with specified JPEG compression quality.
+    Optional: Keep previous brightness/contrast/filters as needed.
+
+
+
+ImageBatchProcessing/
+├── InputImages/
+│   ├── pic1.jpg
+│   ├── pic2.jpg
+│   └── ... more images ...
+├── CroppedResizedImages/   <-- Output Folder (new images saved here)
+├── batch_crop_resize_script.R
+└── project_documentation.docx
+
+
+
+
+
+
+
+
+
+# Load Library
+library(EBImage)
+
+# Define Input and Output Directories
+input_dir <- "~/Desktop/InputImages/"
+output_dir <- "~/Desktop/CroppedResizedImages/"
+
+# Get List of Image Files
+image_files <- list.files(path = input_dir, pattern = "\\.jpg$|\\.png$", full.names = TRUE)
+
+# Create Output Directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Define Crop Coordinates (x1:x2, y1:y2) — Modify as per requirement
+crop_x1 <- 500
+crop_x2 <- 1500
+crop_y1 <- 500
+crop_y2 <- 1500
+
+# Define Resize Dimensions (Width x Height)
+resize_width <- 500
+resize_height <- 500
+
+# Batch Processing Loop
+for (img_path in image_files) {
+  # Read Image
+  img <- readImage(img_path)
+  
+  # Image Name (for saving)
+  img_name <- basename(img_path)
+  
+  # Step 1: Crop Image
+  cropped_img <- img[crop_x1:crop_x2, crop_y1:crop_y2, ]
+  
+  # Step 2: Resize Image
+  resized_img <- resize(cropped_img, resize_width, resize_height)
+  
+  # Step 3: Save with Compression Quality (for JPEG)
+  # EBImage writeImage() doesn't have direct quality param, so use JPEG-specific options.
+  output_path <- file.path(output_dir, paste0("cropped_resized_", img_name))
+  writeImage(resized_img, output_path, quality = 85)  # Quality from 1 to 100      #writeImage() quality option works only for JPEG images.
+  
+  print(paste("Processed and saved:", output_path))
+}
+
+print("Batch cropping, resizing, and saving complete!")
