@@ -1,0 +1,81 @@
+Project Title:
+Image Processing & Analysis using EBImage in R with Automate batch processing of multiple images
+
+Workflow Steps:
+
+    Load Images	-> Reads all JPG/PNG files from InputImages/ directory.
+    Processing Pipeline ->	Applies brightness, contrast, gamma correction, blurring, sharpening.
+    Save Processed Images	-> Saves each processed image in ProcessedImages/ folder.
+    Histogram Visualization	-> Optionally plots intensity histograms for each processed image.
+    Scalable	-> Can handle any number of images by simply dropping them in the folder.
+
+
+ImageBatchProcessing/
+├── InputImages/
+│   ├── pic1.jpg
+│   ├── pic2.jpg
+│   └── ... more images ...
+├── ProcessedImages/   <-- Output Folder (auto-created)
+├── batch_processing_script.R
+└── project_documentation.docx
+
+
+
+image_processing_script.R
+
+# Load Library
+library(EBImage)
+
+# Define Input and Output Directories
+input_dir <- "~/Desktop/InputImages/"
+output_dir <- "~/Desktop/ProcessedImages/"
+
+# Get List of Image Files
+image_files <- list.files(path = input_dir, pattern = "\\.jpg$|\\.png$", full.names = TRUE)
+
+# Create Output Directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Batch Processing Loop
+for (img_path in image_files) {
+  # Read Image
+  img <- readImage(img_path)
+  
+  # Image Name (for saving)
+  img_name <- basename(img_path)
+  
+  # Process 1: Brightness Increase
+  bright_img <- img + 0.3
+  
+  # Process 2: Contrast Increase
+  contrast_img <- bright_img * 1.5
+  
+  # Process 3: Gamma Correction (gamma = 0.8)
+  gamma_img <- contrast_img^0.8
+  
+  # Process 4: Low-pass Filter (Blur)
+  low_pass <- makeBrush(51, shape = 'disc', step=FALSE)^2
+  low_pass <- low_pass / sum(low_pass)
+  blurred_img <- filter2(gamma_img, low_pass)
+  
+  # Process 5: High-pass Filter (Sharpen)
+  high_pass <- matrix(1, nc=3, nr=3)
+  high_pass[2,2] <- -8
+  sharpened_img <- filter2(gamma_img, high_pass)
+  
+  # Combine: Blended Image (Original + Sharpened)
+  enhanced_img <- (gamma_img + sharpened_img / 4)
+  
+  # Save Processed Image
+  output_path <- file.path(output_dir, paste0("processed_", img_name))
+  writeImage(enhanced_img, output_path)
+  
+  # Optional: Plot Histogram for the Processed Image
+  hist(enhanced_img, main = paste("Histogram of", img_name))
+  
+  print(paste("Processed and saved:", output_path))
+}
+
+print("Batch processing complete!")
